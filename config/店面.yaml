@@ -1,0 +1,30 @@
+list_meta:
+  houseid: 591編號
+  region_name: 城市
+  section_name: 鄉鎮市區
+  address: 自訂地址
+  price:
+    # use `label` when need to set parsing method
+    # use key name if `label` is not given
+    label: 租金
+    # use `clean_number` to convert string to number
+    clean_number: true
+  area: 坪數
+  posttime: 刊登天數
+detail_meta:
+  n_views: 瀏覽次數
+  address: 完整地址
+  title: 標題
+  imgs: 照片
+  top_metas:
+    # use `_all` to export all field
+    _all: true
+  side_metas:
+    _all: true
+  environment:
+    _all: true
+  is_deal: 已成交
+  owner: 
+    _all: true
+  desp: 說明
+rough_gps: 約略座標

@@ -5,6 +5,7 @@ services:
     volumes:
       - ./requirements.txt:/app/requirements.txt
       - ./crawler:/app/crawler
+      - ./config:/app/config
       - ./management:/app/management
       - ./scrapy.cfg:/app/scrapy.cfg
       - ./data:/app/data
