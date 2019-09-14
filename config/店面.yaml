@@ -1,7 +1,10 @@
 list_meta:
+  # when get duplicated label, later value will overwrite former
   houseid: 591編號
+  post_id: 591編號
   region_name: 城市
   section_name: 鄉鎮市區
+  section_str: 鄉鎮市區
   address: 自訂地址
   price:
     # use `label` when need to set parsing method
@@ -9,11 +12,15 @@ list_meta:
     label: 租金
     # use `clean_number` to convert string to number
     clean_number: true
-  area: 坪數
+  area: 
+    label: 坪數
+    clean_number: true
   posttime: 刊登天數
 detail_meta:
   n_views: 瀏覽次數
   address: 完整地址
+  top_region: 城市
+  sub_region: 鄉鎮市區
   title: 標題
   imgs: 照片
   top_metas:

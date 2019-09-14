@@ -67,11 +67,11 @@ class ExportCmd(SubCmd):
         return column_list
 
     def gen_column_list(self, column_config):
-        self.column_list = []
+        column_list = []
         need_expand = []
 
         def append_column_list(a_column, column_path):
-            self.column_list.append(
+            column_list.append(
                 self.normalize_column_config(
                     a_column,
                     column_path
@@ -109,14 +109,48 @@ class ExportCmd(SubCmd):
                     )
 
         if need_expand:
-            self.column_list.extend(self.expand_columns(need_expand))
+            column_list.extend(self.expand_columns(need_expand))
+
+        return column_list
+
+    def merge_column_list(self, column_list):
+        merged_list = []
+        merged_dict = {}
+
+        def gen_path_config(column_config):
+            path_config = column_config.copy()
+            path_config.pop('label')
+            return path_config
+
+        for column in column_list:
+            name = column['label']
+            if name in merged_dict:
+                merged_dict[name]['targets'].append(gen_path_config(column))
+            else:
+                merged_dict[name] = {
+                    'label': name,
+                    'targets': [
+                        gen_path_config(column)
+                    ]
+                }
+                merged_list.append(merged_dict[name])
+
+        return merged_list
 
     def print_header(self, writer):
         headers = map(lambda column: column['label'], self.column_list)
         writer.writerow(headers)
 
     def get_cell_value(self, house, column_config):
-        the_path = column_config['path']
+        for target_config in reversed(column_config['targets']):
+            value = self.get_target_value(house, target_config)
+            if value is not None:
+                return value
+
+        return None
+
+    def get_target_value(self, house, target_config):
+        the_path = target_config['path']
         section = the_path[0]
         child_path = the_path[1:]
         cursor = getattr(house, section)
@@ -131,7 +165,7 @@ class ExportCmd(SubCmd):
         if isinstance(cursor, dict):
             cursor = json.dumps(cursor, ensure_ascii=False)
 
-        if column_config.get('clean_number'):
+        if target_config.get('clean_number'):
             cursor = clean_number(cursor)
 
         return cursor
@@ -156,7 +190,9 @@ class ExportCmd(SubCmd):
         with open(args.columns, 'r') as f:
             column_config = yaml.safe_load(f)
 
-        self.gen_column_list(column_config)
+        self.column_list = self.merge_column_list(
+            self.gen_column_list(column_config)
+        )
 
         # print csv header
         if not args.outfile:
