@@ -9,6 +9,7 @@ import logging
 from peewee import DoesNotExist
 from scrapy import Request
 from scrapy_twrh.spiders.util import clean_number
+from scrapy_twrh.spiders.enums import UNKNOWN_ENUM
 from scrapy_twrh.spiders.rental591 import Rental591Spider, util
 from scrapy_twrh.items import RawHouseItem
 from management.model import Job
@@ -48,9 +49,20 @@ class OneshotSpider(Rental591Spider):
             data = json.loads(response.text)
             count = clean_number(data['records'])
             logging.info(f'[{meta.name}] total {count} house to crawl!')
+            # #items return per request may differ from API endpoint
+            self.N_PAGE = len(data['data'])
 
         for item in self.default_parse_list(response):
             yield item
+
+    def get_enum(self, enum_cls, house_id, value):
+        # ignore undefined enum as we are collecting generic rental item
+        try:
+            enum = enum_cls[value]
+        except KeyError:
+            enum = UNKNOWN_ENUM
+
+        return enum
 
     def gen_list_request_args(self, rental_meta: util.ListRequestMeta):
         """add order and orderType, so to get latest created house"""
