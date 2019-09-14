@@ -50,7 +50,7 @@ class OneshotSpider(Rental591Spider):
             count = clean_number(data['records'])
             logging.info(f'[{meta.name}] total {count} house to crawl!')
             # #items return per request may differ from API endpoint
-            self.N_PAGE = len(data['data'])
+            self.N_PAGE = len(data['data']['data'])
 
         for item in self.default_parse_list(response):
             yield item
