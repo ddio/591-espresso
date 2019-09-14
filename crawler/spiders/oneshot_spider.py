@@ -54,7 +54,7 @@ class OneshotSpider(Rental591Spider):
 
     def gen_list_request_args(self, rental_meta: util.ListRequestMeta):
         """add order and orderType, so to get latest created house"""
-        url = f'{self.job.url}&region={rental_meta.id}&firstRow={rental_meta.page}'
+        url = f'{self.job.url}&region={rental_meta.id}&firstRow={rental_meta.page * self.N_PAGE}'
         
         return {
             **super().gen_list_request_args(rental_meta),

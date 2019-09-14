@@ -31,7 +31,7 @@ COOKIES_ENABLED = False
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'crawler.pipelines.SimpleJsonExporter': 300
+    'crawler.pipelines.DatabaseExporter': 300
 }
 
 EXTENSIONS = {
