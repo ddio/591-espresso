@@ -19,6 +19,7 @@ class DatabaseExporter(object):
                 job_id=spider.job.id,
                 house_id=item['vendor_house_id']
             )
-            house.rough_gps = item['rough_coordinate']
+            gps = item['rough_coordinate']
+            house.rough_gps = [gps[0].__str__(), gps[1].__str__()]
             house.save()
         return item
