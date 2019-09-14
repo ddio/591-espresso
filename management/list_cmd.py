@@ -9,4 +9,4 @@ class ListCmd(SubCmd):
         print('ID | URL           | Cities    |  #House')
         for job in Job.select().order_by(Job.created_at.desc()):
             count = job.houses.count()
-            print(f'{job.id}')
+            print(f'{job.id} | {job.url} | {".".join(job.cities)} | {count}')
