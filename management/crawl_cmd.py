@@ -1,7 +1,6 @@
 from importlib import import_module
 from types import ModuleType
 from scrapy.crawler import CrawlerProcess
-from crawler.spiders.oneshot_spider import OneshotSpider
 from .subcmd import SubCmd
 from .model import Job
 
@@ -48,5 +47,7 @@ class CrawlCmd(SubCmd):
         settings = self.get_crawler_settings()
 
         crawler = CrawlerProcess(settings=settings)
+
+        from crawler.spiders.oneshot_spider import OneshotSpider
         crawler.crawl(OneshotSpider, job_id=new_job.id, novip=args.novip)
         crawler.start()
