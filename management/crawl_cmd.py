@@ -15,7 +15,15 @@ class CrawlCmd(SubCmd):
         self.parser.add_argument(
             '--cities',
             '-c',
-            help='Comma separated list of city to crawl, use `台` instead of `臺`'
+            help='Comma separated list of city to crawl'
+        )
+        self.parser.add_argument(
+            '--novip',
+            '-nv',
+            default=False,
+            const=True,
+            nargs='?',
+            help='Skip VIP(advertisement)'
         )
 
     def get_crawler_settings(self):
@@ -28,14 +36,17 @@ class CrawlCmd(SubCmd):
 
     def execute(self, args):
         cities = []
+        options = {
+            'novip': args.novip
+        }
         if args.cities:
-            cities = args.cities.split(',')
+            cities = args.cities.replace('臺','台').split(',')
 
-        new_job = Job(url=args.url, cities=cities)
+        new_job = Job(url=args.url, cities=cities, opts=options)
         new_job.save()
 
         settings = self.get_crawler_settings()
 
         crawler = CrawlerProcess(settings=settings)
-        crawler.crawl(OneshotSpider, job_id=new_job.id)
+        crawler.crawl(OneshotSpider, job_id=new_job.id, novip=args.novip)
         crawler.start()

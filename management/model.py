@@ -14,6 +14,7 @@ class Job(Model):
     id = AutoField()
     url = CharField()
     cities = JSONField(null=True, json_dumps=friendly_json_dumps)
+    opts = JSONField(null=True, json_dumps=friendly_json_dumps)
     created_at = DateTimeField(default=datetime.now)
     updated_at = DateTimeField()
 
