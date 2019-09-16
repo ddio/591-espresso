@@ -68,7 +68,7 @@ class OneshotSpider(Rental591Spider):
         houses = data['data']['data']
 
         if not self.novip:
-            house = data['data']['topData'] + house
+            houses = data['data']['topData'] + houses
 
         for house in houses:
             # copy from twrh
