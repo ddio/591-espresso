@@ -1,5 +1,5 @@
 import yaml
-from os import path
+from os import path, makedirs
 import time
 import csv
 import logging
@@ -22,8 +22,60 @@ class ExportCmd(SubCmd):
         self.parser.add_argument(
             '--outfile',
             '-o',
-            help='Name of output file, default data/<job_id>_<timestamp>.csv'
+            help='Name of output file, default data/<job_id>-<timestamp>.csv'
         )
+        self.parser.add_argument(
+            '--outprefix',
+            '-p',
+            help='''Export data of each city to a single file.
+        File name would be <prefix>-<city name>.csv.
+        <prefix> would be <job_id>-<timestamp> if only dir is given.'''
+        )
+
+    def get_default_prefix(self):
+        now = time.strftime('%Y%m%d-%H%M%S')
+        return f'{self.job_id}-{now}'
+
+    def export_per_city(self, city_prefix):
+        base_dir = path.dirname(city_prefix)
+        base_prefix = path.basename(city_prefix)
+        if not path.isdir(base_dir):
+            makedirs(base_dir)
+
+        if not base_prefix:
+            base_prefix = self.get_default_prefix()
+
+        opened_cities = {}
+
+        for house in House.select().where(House.job_id == self.job_id):
+            row = self.get_export_row_value(house)
+            city = ''
+            if house.detail_meta:
+                city = house.detail_meta.get('top_region', '')
+
+            if not city and house.list_meta:
+                city = house.list_meta.get('region_name', '')
+
+            if not opened_cities.get(city):
+                city_path = path.join(base_dir, f'{base_prefix}-{city}.csv')
+                opened_cities[city] = csv.writer(open(city_path, 'w'))
+                self.print_header(opened_cities[city])
+
+            opened_cities[city].writerow(row)
+
+    def export_whole_job(self, outfile):
+        if not outfile:
+            outfile = path.join(
+                path.dirname(__file__),
+                f'../data/{self.get_default_prefix()}.csv'
+            )
+        with open(outfile, 'w') as csvfile:
+            writer = csv.writer(csvfile)
+            self.print_header(writer)
+
+            for house in House.select().where(House.job_id == self.job_id):
+                row = self.get_export_row_value(house)
+                writer.writerow(row)
 
     def normalize_column_config(self, a_column, column_path):
         if isinstance(a_column, str):
@@ -170,13 +222,11 @@ class ExportCmd(SubCmd):
 
         return cursor
 
-    def print_body(self, writer):
-        for house in House.select().where(House.job_id == self.job_id):
-            row = map(
-                lambda column: self.get_cell_value(house, column),
-                self.column_list
-            )
-            writer.writerow(row)
+    def get_export_row_value(self, row):
+        return map(
+            lambda column: self.get_cell_value(row, column),
+            self.column_list
+        )
 
     def execute(self, args):
         self.job_id = args.id
@@ -194,16 +244,8 @@ class ExportCmd(SubCmd):
             self.gen_column_list(column_config)
         )
 
-        # print csv header
-        if not args.outfile:
-            now = time.strftime('%Y%m%d-%H%M%S')
-            self.outfile = path.join(path.dirname(__file__), f'../data/{now}.csv')
+        # export per city file?
+        if args.outprefix:
+            self.export_per_city(args.outprefix)
         else:
-            self.outfile = args.outfile
-
-        with open(self.outfile, 'w') as csvfile:
-            writer = csv.writer(csvfile)
-            self.print_header(writer)
-
-            # print body
-            self.print_body(writer)
+            self.export_whole_job(args.outfile)
