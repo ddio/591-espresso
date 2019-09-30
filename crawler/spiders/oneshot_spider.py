@@ -12,7 +12,7 @@ from scrapy_twrh.spiders.util import clean_number
 from scrapy_twrh.spiders.enums import UNKNOWN_ENUM
 from scrapy_twrh.spiders.rental591 import Rental591Spider, util
 from scrapy_twrh.items import RawHouseItem, GenericHouseItem
-from management.model import Job
+from management.model import Job, HouseStats
 
 class OneshotSpider(Rental591Spider):
     name = 'oneshot'
@@ -74,6 +74,15 @@ class OneshotSpider(Rental591Spider):
             # copy from twrh
             house['is_vip'] = 'id' not in house
             house_item = self.gen_shared_attrs(house, meta)
+
+            stats, created = HouseStats.get_or_create(
+                job_id=self.job.id,
+                house_id=house_item['vendor_house_id']
+            )
+
+            if not created:
+                continue
+
             yield RawHouseItem(
                 house_id=house_item['vendor_house_id'],
                 vendor=self.vendor,
