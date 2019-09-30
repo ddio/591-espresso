@@ -15,7 +15,7 @@ list_meta:
   area: 
     label: 坪數
     clean_number: true
-  posttime: 刊登天數
+  posttime: 最後更新日期
 detail_meta:
   n_views: 瀏覽次數
   address: 完整地址

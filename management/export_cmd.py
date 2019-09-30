@@ -1,5 +1,6 @@
 import yaml
 from os import path, makedirs
+from importlib import import_module
 import time
 import csv
 import logging
@@ -214,11 +215,16 @@ class ExportCmd(SubCmd):
                 cursor = None
                 break
 
-        if isinstance(cursor, dict):
+        if target_config.get('fn'):
+            cursor = target_config.get('fn')(house)
+        elif isinstance(cursor, dict):
             cursor = json.dumps(cursor, ensure_ascii=False)
-
-        if target_config.get('clean_number'):
-            cursor = clean_number(cursor)
+        elif target_config.get('clean_number'):
+            try:
+                cursor = clean_number(cursor)
+            except ValueError:
+                logging.error(f'Invalid number: {cursor}')
+                cursor = None
 
         return cursor
 
@@ -231,14 +237,21 @@ class ExportCmd(SubCmd):
     def execute(self, args):
         self.job_id = args.id
 
-        if not path.isfile(args.columns):
-            logging.error(f'Invalid column config: {args.columns}')
-            return
-
         # prepare normalized column list
         column_config = {}
-        with open(args.columns, 'r') as f:
-            column_config = yaml.safe_load(f)
+        if args.columns.endswith('.yaml') or args.columns.endswith('.yml'):
+            # we can do yaml
+            if not path.isfile(args.columns):
+                logging.error(f'Invalid column config: {args.columns}')
+                return
+            with open(args.columns, 'r') as f:
+                column_config = yaml.safe_load(f)
+        else:
+            if not path.isfile(path.join('config', f'{args.columns}.py')):
+                # or python module in config
+                logging.error(f'Invalid column config: {args.columns}')
+                return
+            column_config = import_module(f'config.{args.columns}').column_config
 
         self.column_list = self.merge_column_list(
             self.gen_column_list(column_config)
