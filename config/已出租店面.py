@@ -6,7 +6,8 @@ taipei_time = timezone(timedelta(hours=8))
 
 def parse_dealtime(row: House):
     base_time = row.created_at
-    deal_days_ago = row.list_meta.get('addInfo')
+    # example: 17天成交(1)
+    deal_days_ago = row.list_meta.get('addInfo').split('天')[0]
 
     try:
         deal_days_ago = clean_number(deal_days_ago)
@@ -36,12 +37,9 @@ column_config = {
             'clean_number': True
         },
         'posttime': '最後更新相對日期',
-        'addInfo': {
-            'label': '成交於幾天前',
-            'clean_number': True
-        },
+        'addInfo': '成交所費時間',
         'dealtime': {
-            'label': '成交日期',
+            'label': '推測成交日期',
             'fn': parse_dealtime
         }
     },
