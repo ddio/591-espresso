@@ -7,17 +7,25 @@ taipei_time = timezone(timedelta(hours=8))
 def parse_dealtime(row: House):
     base_time = row.created_at
     # example: 17天成交(1)
-    deal_days_ago = row.list_meta.get('addInfo').split('天')[0]
+    days_taken = row.list_meta.get('addInfo').split('天')[0]
+    # example: 今日、昨日、x天前
+    last_updated = row.list_meta.get('posttime')
 
     try:
-        deal_days_ago = clean_number(deal_days_ago)
+        days_taken = clean_number(days_taken)
     except ValueError:
         return None
 
-    if deal_days_ago is None:
+    if days_taken is None:
         return None
 
-    base_time -= timedelta(days=deal_days_ago)
+    if last_updated == '今日':
+        pass
+    elif last_updated == '昨日':
+        base_time -= timedelta(days=1)
+    else:
+        base_time -= timedelta(days=clean_number(last_updated))
+
     return base_time.astimezone(taipei_time).strftime('%Y-%m-%d')
 
 column_config = {
